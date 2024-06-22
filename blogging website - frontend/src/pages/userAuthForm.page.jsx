@@ -1,25 +1,34 @@
-import { Link, json } from "react-router-dom";
+import { Link, Navigate, json, useNavigate } from "react-router-dom";
 import InputComponent from "../components/input.component";
 import GoogleImg from "../imgs/google.png";
 import AnimationPage from "../common/page-animation";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import axios from "axios";
 import { storeInSession } from "../common/session";
+import { userContext } from "../App";
 
 const UserAuthForm = ({ type }) => {
+  const navigate = useNavigate();
   const [formData, SetFormData] = useState({
     fullname: "",
     email: "",
     password: "",
   });
 
+  const {
+    authState: { access_token },
+    setAuthState,
+  } = useContext(userContext);
+
+  console.log(access_token);
+
   const userAuthThroughServer = (serverRoute, formData) => {
     axios
       .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, formData)
       .then(({ data }) => {
         storeInSession("user", JSON.stringify(data));
-        console.log(sessionStorage);
+        setAuthState(data);
       })
       .catch(({ response }) => {
         toast.error(response.data.message);
@@ -65,7 +74,9 @@ const UserAuthForm = ({ type }) => {
     userAuthThroughServer(serverRoute, data);
   };
 
-  return (
+  return access_token ? (
+    <Navigate to={"/"} />
+  ) : (
     <AnimationPage keyValue={type}>
       <section className="h-cover flex items-center justify-center">
         <Toaster />
