@@ -4,6 +4,7 @@ import "dotenv/config";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
+import cors from "cors";
 
 /* Schemas */
 import User from "./Schema/User.js";
@@ -11,6 +12,7 @@ import User from "./Schema/User.js";
 let PORT = 3000;
 const server = express();
 server.use(express.json());
+server.use(cors());
 
 // Regex
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
@@ -56,18 +58,21 @@ server.post("/sign-up", (req, res) => {
       success: false,
       message: "Fullname must be more than 3 characters",
     });
+    return;
   }
 
   if (!email.length) {
     res
       .status(403)
       .json({ success: false, message: "Please provide your email" });
+      return;
   }
 
   if (!emailRegex.test(email)) {
     res
       .status(403)
       .json({ success: false, message: "Please provide your valid email" });
+      return;
   }
 
   if (!passwordRegex.test(password)) {
@@ -76,6 +81,7 @@ server.post("/sign-up", (req, res) => {
       message:
         "Your password must be greater than 6 and less than 20 words with a numeric, including atleast 1 uppercase and 1 lowercase character",
     });
+    return;
   }
 
   bcrypt.hash(password, 10, async (err, hashPassword) => {
@@ -93,14 +99,17 @@ server.post("/sign-up", (req, res) => {
       .save()
       .then((user) => {
         res.status(200).json(formatDataToSend(user));
+        return;
       })
       .catch((err) => {
         if (err.code === 11000) {
           res
             .status(500)
             .json({ success: false, message: "Email already exits" });
+            return;
         }
         res.status(500).json({ success: false, message: err.message });
+        return;
       });
   });
 });
@@ -111,31 +120,35 @@ server.post("/sign-in", async (req, res) => {
   User.findOne({ "personal_info.email": email })
     .then((user) => {
       if (!user) {
-        return res
+        res
           .status(403)
           .json({ success: false, message: "Email doesn't exist" });
+        return;
       }
 
       bcrypt.compare(password, user.personal_info.password, (err, result) => {
         if (err) {
-          return res.status(403).json({
+          res.status(403).json({
             success: false,
             message: "Error occured while logging in please try again",
           });
+          return;
         }
 
         if (!result) {
-          return res
+          res
             .status(403)
             .json({ success: false, message: "Password didn't match" });
+          return;
         } else {
-          return res.status(200).json(formatDataToSend(user));
+          res.status(200).json(formatDataToSend(user));
+          return;
         }
       });
-      
     })
     .catch((err) => {
-      return res.status(500).json({ success: false, message: err.message });
+      res.status(500).json({ success: false, message: err.message });
+      return;
     });
 });
 

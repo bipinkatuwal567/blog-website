@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 
-const InputComponent = ({ type, id, placeHolder, value = "", name, icon }) => {
+const InputComponent = ({
+  type,
+  id,
+  placeHolder,
+  value = "",
+  name,
+  icon,
+  onChange,
+}) => {
   const [showVisibility, setShowVisibility] = useState(true);
   return (
     <div className="relative w-full mb-4">
@@ -11,8 +19,10 @@ const InputComponent = ({ type, id, placeHolder, value = "", name, icon }) => {
         }
         id={id}
         placeholder={placeHolder}
-        defaultValue={value}
+        // defaultValue={value}
+        value={value}
         className="input-box"
+        onChange={onChange}
       />
 
       <i className={`fi fi-rr-${icon} input-icon`}></i>
