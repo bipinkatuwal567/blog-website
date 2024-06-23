@@ -65,14 +65,14 @@ server.post("/sign-up", (req, res) => {
     res
       .status(403)
       .json({ success: false, message: "Please provide your email" });
-      return;
+    return;
   }
 
   if (!emailRegex.test(email)) {
     res
       .status(403)
       .json({ success: false, message: "Please provide your valid email" });
-      return;
+    return;
   }
 
   if (!passwordRegex.test(password)) {
@@ -106,7 +106,7 @@ server.post("/sign-up", (req, res) => {
           res
             .status(500)
             .json({ success: false, message: "Email already exits" });
-            return;
+          return;
         }
         res.status(500).json({ success: false, message: err.message });
         return;

@@ -9,7 +9,7 @@ const InputComponent = ({
   icon,
   onChange,
 }) => {
-  const [showVisibility, setShowVisibility] = useState(true);
+  const [showVisibility, setShowVisibility] = useState(false);
   return (
     <div className="relative w-full mb-4">
       <input

@@ -1,9 +1,22 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import Logo from "../imgs/logo.png";
+import { userContext } from "../App";
+import UserNavigation from "./user-navigation.component";
 
 const Navbar = () => {
+  const {
+    authState,
+    authState: { access_token, fullname, profile_img },
+  } = useContext(userContext);
+
   const [showVisibility, setShowVisibility] = useState(false);
+
+  const [showUserNavPanel, setShowUserNavPanel] = useState(false);
+
+  const handleUserNavPanel = () => {
+    setShowUserNavPanel((currentVal) => !currentVal);
+  };
 
   return (
     <>
@@ -40,13 +53,37 @@ const Navbar = () => {
             <p>Write</p>
           </Link>
 
-          <Link to={"/sign-in"} className="btn-dark py-2">
-            Sign In
-          </Link>
+          {access_token ? (
+            <>
+              <Link to={"/dashboard/notification"}>
+                <button className="w-12 h-12 rounded-full bg-grey hover:bg-black/10 relative grid place-items-center">
+                  <i className="fi fi-rr-bell text-xl block text-black mt-1"></i>
+                </button>
+              </Link>
 
-          <Link to={"/sign-up"} className="btn-light py-2 hidden md:block">
-            Sign Up
-          </Link>
+              <div className="relative" onClick={handleUserNavPanel}>
+                <button className="w-12 h-12 rounded-full mt-1">
+                  <img
+                    src={profile_img}
+                    className="w-full h-full rounded-full object-cover"
+                    alt="profile image"
+                  />
+                </button>
+
+                {showUserNavPanel ? <UserNavigation /> : null}
+              </div>
+            </>
+          ) : (
+            <>
+              <Link to={"/sign-in"} className="btn-dark py-2">
+                Sign In
+              </Link>
+
+              <Link to={"/sign-up"} className="btn-light py-2 hidden md:block">
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
