@@ -10,12 +10,20 @@ const Navbar = () => {
     authState: { access_token, fullname, profile_img },
   } = useContext(userContext);
 
+  console.log(authState);
+
   const [showVisibility, setShowVisibility] = useState(false);
 
   const [showUserNavPanel, setShowUserNavPanel] = useState(false);
 
   const handleUserNavPanel = () => {
     setShowUserNavPanel((currentVal) => !currentVal);
+  };
+
+  const handlePanelFocus = () => {
+    setTimeout(() => {
+      setShowUserNavPanel(false);
+    }, 200);
   };
 
   return (
@@ -61,7 +69,11 @@ const Navbar = () => {
                 </button>
               </Link>
 
-              <div className="relative" onClick={handleUserNavPanel}>
+              <div
+                className="relative"
+                onClick={handleUserNavPanel}
+                onBlur={handlePanelFocus}
+              >
                 <button className="w-12 h-12 rounded-full mt-1">
                   <img
                     src={profile_img}

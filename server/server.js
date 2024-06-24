@@ -5,6 +5,9 @@ import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import cors from "cors";
+import admin from "firebase-admin";
+import serviceAccount from "./blog-webapp.json" with { type: "json" };
+import { getAuth } from "firebase-admin/auth";
 
 /* Schemas */
 import User from "./Schema/User.js";
@@ -13,6 +16,10 @@ let PORT = 3000;
 const server = express();
 server.use(express.json());
 server.use(cors());
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 // Regex
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
@@ -126,29 +133,95 @@ server.post("/sign-in", async (req, res) => {
         return;
       }
 
-      bcrypt.compare(password, user.personal_info.password, (err, result) => {
-        if (err) {
-          res.status(403).json({
-            success: false,
-            message: "Error occured while logging in please try again",
-          });
-          return;
-        }
-
-        if (!result) {
-          res
-            .status(403)
-            .json({ success: false, message: "Password didn't match" });
-          return;
-        } else {
-          res.status(200).json(formatDataToSend(user));
-          return;
-        }
-      });
+      if(!user.google_auth){
+        bcrypt.compare(password, user.personal_info.password, (err, result) => {
+          if (err) {
+            res.status(403).json({
+              success: false,
+              message: "Error occured while logging in please try again",
+            });
+            return;
+          }
+  
+          if (!result) {
+            res
+              .status(403)
+              .json({ success: false, message: "Password didn't match" });
+            return;
+          } else {
+            res.status(200).json(formatDataToSend(user));
+            return;
+          }
+        });
+      }else{
+        return res.status(403).json({success: false, message: "Account was created using google. Try logging in with google"})
+      }
     })
     .catch((err) => {
       res.status(500).json({ success: false, message: err.message });
       return;
+    });
+});
+
+// Google Auth route
+server.post("/google-auth", async (req, res) => {
+  let { access_token } = req.body;
+
+  getAuth()
+    .verifyIdToken(access_token)
+    .then(async (decodedToken) => {
+      let { email, name, picture } = decodedToken;
+      picture = picture.replace("s96-c", "s384-c");
+
+      let user = await User.findOne({ "personal_info.email": email })
+        .select(
+          "personal_info.fullname personal_info.username personal_info.profile_img google_auth"
+        )
+        .then((user) => {
+          return user || null;
+        })
+        .catch((err) => {
+          return res.status(500).json({ success: false, message: err.message
+           });
+        });
+
+      if (user) {
+        // Login
+        if (!user.google_auth) {
+          return res.status(403).json({
+            success: false,
+            message: "This email was signed up without google auth. Please log in with password to access the account"
+          });
+        }
+      } else {
+        // Sign up
+        let username = await createUniqueUsername(email);
+
+        user = new User({
+          personal_info: {
+            username: username,
+            fullname: name,
+            email: email,
+            profile_img: picture,
+          },
+          google_auth: true,
+        });
+
+        await user
+          .save()
+          .then((u) => {
+            user = u;
+          })
+          .catch((err) => {
+            return res.status(403).json({ success: false, message: err.message });
+          });
+      }
+      return res.status(200).json(formatDataToSend(user));
+    })
+    .catch((err) => {
+      return res
+        .status(500)
+        .json({ success: false, message: err.message });
     });
 });
 

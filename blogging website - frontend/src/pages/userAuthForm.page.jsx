@@ -1,4 +1,4 @@
-import { Link, Navigate, json, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import InputComponent from "../components/input.component";
 import GoogleImg from "../imgs/google.png";
 import AnimationPage from "../common/page-animation";
@@ -7,9 +7,9 @@ import { Toaster, toast } from "react-hot-toast";
 import axios from "axios";
 import { storeInSession } from "../common/session";
 import { userContext } from "../App";
+import { GoogleAuthLogin } from "../common/firebase";
 
 const UserAuthForm = ({ type }) => {
-  const navigate = useNavigate();
   const [formData, SetFormData] = useState({
     fullname: "",
     email: "",
@@ -20,8 +20,6 @@ const UserAuthForm = ({ type }) => {
     authState: { access_token },
     setAuthState,
   } = useContext(userContext);
-
-  console.log(access_token);
 
   const userAuthThroughServer = (serverRoute, formData) => {
     axios
@@ -72,6 +70,24 @@ const UserAuthForm = ({ type }) => {
       type === "sign-in" ? { email, password } : { fullname, email, password };
 
     userAuthThroughServer(serverRoute, data);
+  };
+
+  /* Google Auth */
+  const handleGoogleLogin = (e) => {
+    e.preventDefault();
+    GoogleAuthLogin()
+      .then((user) => {
+        let serverRoute = "/google-auth";
+        const formData = {
+          access_token: user.accessToken,
+        };
+
+        userAuthThroughServer(serverRoute, formData);
+      })
+      .catch((err) => {
+        toast.error("Something went wrong with google login");
+        return console.log(err);
+      });
   };
 
   return access_token ? (
@@ -129,7 +145,10 @@ const UserAuthForm = ({ type }) => {
             <hr className="bg-black w-1/2" />
           </div>
 
-          <button className="btn-dark w-[90%] flex center justify-center items-center gap-4">
+          <button
+            className="btn-dark w-[90%] flex center justify-center items-center gap-4"
+            onClick={handleGoogleLogin}
+          >
             <img src={GoogleImg} alt="googlelogo" className="w-5" />
             <p>Continue with Google</p>
           </button>
