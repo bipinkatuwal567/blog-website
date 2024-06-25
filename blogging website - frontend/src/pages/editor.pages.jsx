@@ -9,7 +9,7 @@ const EditorPage = () => {
     authState: { access_token },
   } = useContext(userContext);
 
-  const [editorState, setEditorState] = useState("publish");
+  const [editorState, setEditorState] = useState("editor");
   return access_token === null ? (
     <Navigate to={"/sign-in"} />
   ) : editorState === "editor" ? (
