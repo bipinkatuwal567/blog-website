@@ -10,8 +10,6 @@ const Navbar = () => {
     authState: { access_token, fullname, profile_img },
   } = useContext(userContext);
 
-  console.log(authState);
-
   const [showVisibility, setShowVisibility] = useState(false);
 
   const [showUserNavPanel, setShowUserNavPanel] = useState(false);

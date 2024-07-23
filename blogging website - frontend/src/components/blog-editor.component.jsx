@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../imgs/logo.png";
 import AnimationPage from "../common/page-animation";
@@ -12,11 +12,18 @@ import {
 } from "firebase/storage";
 import { app } from "../common/firebase";
 import toast, { Toaster } from "react-hot-toast";
+import { EditorContext } from "../pages/editor.pages";
 
 const BlogEditor = () => {
   const [image, setImage] = useState(null);
   const [imageURL, setImageURL] = useState(null);
   const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null);
+  const {
+    blog,
+    blog: { title, banner, content, des, tags },
+    setBlog,
+  } = useContext(EditorContext);
+  console.log(blog);
 
   const handleImageChange = (e) => {
     let file = e.target.files[0];
@@ -52,12 +59,9 @@ const BlogEditor = () => {
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setImageURL(downloadURL);
+          setBlog({ ...blog, banner: downloadURL });
           toast.dismiss();
           toast.success("Uploaded");
-          // setImage(downloadURL);
-          // console.log(downloadURL);
-          // setFormData({ ...formData, profilePicture: downloadURL });
-          // setImageFileUploading(false);
         });
       }
     );
@@ -73,8 +77,10 @@ const BlogEditor = () => {
     let input = e.target;
 
     input.style.height = "auto";
-    input.style.height = input.scrollHeight + "px"
-  }
+    input.style.height = input.scrollHeight + "px";
+
+    setBlog({ ...blog, title: input.value });
+  };
 
   useEffect(() => {
     if (image) {
@@ -90,7 +96,7 @@ const BlogEditor = () => {
         </Link>
 
         <p className=" max-md:hidden text-black line-clamp-1 w-full">
-          New Blog
+          {title.length ? title : "New Blog"}
         </p>
 
         <div className="flex ml-auto gap-4">
